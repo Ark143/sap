@@ -1,0 +1,22 @@
+SELECT 
+   
+    t1.DocDate AS 'Posting Date',
+    t1.DocNum AS 'Document Number',
+    t1.CardName AS 'BPName',
+    t1.CardCode AS 'BPCode',
+    t1.JrnlMemo AS 'Particulars or Memo',
+    t1.DocTotal AS 'Total Amount',
+    t1.OpenBal AS 'Open Balance',
+    t2.compnyname AS 'Company',
+    DATEDIFF(DAY, t1.DocDate, GETDATE()) AS 'Days Due',
+    SUM(t1.DocTotal) AS 'Sum Total of DocTotal'
+FROM 
+   OVPM T1, OADM t2
+WHERE 
+    t1.JrnlMemo LIKE '%CA FOR%'
+    AND t1.OpenBal >= 1
+GROUP BY
+    GROUPING SETS (
+        (t1.DocDate, t1.DocNum, t1.CardName, t1.CardCode, t1.JrnlMemo, t1.DocTotal, t1.OpenBal, t2.compnyname, DATEDIFF(DAY, t1.DocDate, GETDATE())),
+        ()
+    );
