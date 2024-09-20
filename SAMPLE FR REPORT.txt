@@ -1,0 +1,54 @@
+SELECT 
+    MONTH(DocDate) AS month,
+    YEAR(DocDate) AS year,
+    SUM(DocTotal) AS total_sales
+FROM 
+    OINV
+GROUP BY 
+    MONTH(DocDate),
+    YEAR(DocDate)
+ORDER BY 
+    year, month;
+
+++++++++++++++++++++++
+SELECT
+    T0."DocNum" as "Document Number",
+    T0."DocDate" as "Document Date",
+    T0."CardCode" as "Customer Code",
+    T0."CardName" as "Customer Name",
+    T1."ItemCode" as "Item Code",
+    T1."Dscription" as "Item Description",
+    T1."Quantity" as "Quantity",
+    T1."Price" as "Unit Price",
+    T1."LineTotal" as "Line Total"
+FROM
+    OINV T0
+INNER JOIN
+    INV1 T1 ON T0."DocEntry" = T1."DocEntry"
+
+++++++++++++++++++++++
+
+SELECT T0.[Account], T4.[AcctName],
+Sum(Isnull(T0.[Debit],0)) as Debit, Sum(Isnull(T0.[Credit],0)) as Credit,
+T0.[Project] as [Project], T1.[PrjName], T1.[U_Clnt] as Client, T3.SlpName as [Sales Employee], T4.[Counter]
+FROM JDT1 T0 inner join
+OPRJ T1 on T0.[Project] = T1.[PrjCode] left join
+OCRD T2 on T1.[U_Clnt] = T2.CardCode left join
+OSLP T3 on T2.SlpCode = T3.SlpCode inner join
+OACT T4 on T0.[Account] = T4.[AcctCode]
+WHERE T0.[Account]  like '5%'
+and T0.RefDate between '1-23-2023' and '12-31-2023' and ( T1.[PrjName] between 'ACBEL LAGUNA' and 'VSO VALERIE PHILS.')
+Group By T0.[Account], T4.[AcctName], T0.[Project], T1.[PrjName], T1.[U_Clnt], T3.SlpName, T4.[Counter]
+
+UNION ALL
+
+SELECT T0.[Account], T4.[AcctName],
+Sum(Isnull(T0.[Debit],0)) as Debit, Sum(Isnull(T0.[Credit],0)) as Credit, T1.[PrjCode] as [Project], T1.[PrjName], T1.[U_Clnt] as Client, T3.SlpName as [Sales Employee], T4.[Counter]
+FROM JDT1 T0 left join
+OPRJ T1 on T0.[ContraAct] = T1.[U_Clnt] left join
+OCRD T2 on T0.[ContraAct] = T2.[CardCode] left join
+OSLP T3 on T2.[SlpCode] = T3.[SlpCode] inner join
+OACT T4 on T0.[Account] = T4.[AcctCode]
+WHERE T0.[Account]  like '41010101'
+and T0.RefDate between 1-23-2023 and 12-31-2023 and ( T1.[PrjName] between 'ACBEL LAGUNA' and 'VSO VALERIE PHILS.')
+Group By T0.[Account], T4.[AcctName], T1.[PrjCode], T1.[PrjName], T1.[U_Clnt], T3.SlpName, T4.[Counter]
