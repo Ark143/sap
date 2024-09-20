@@ -1,0 +1,127 @@
+
+GO
+/****** Object:  StoredProcedure [dbo].[jm_2024_cm_report]    Script Date: 03/21/2024 10:48:57 am ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- =============================================
+-- Author:		<Author,,Name>
+-- Create date: <Create Date,,>
+-- Description:	<Description,,>
+-- =============================================
+create PROCEDURE [dbo].[jm_2024_cm_report]
+	
+	 -- Declare variables for month and year range
+ @StartMonth INT ,
+@StartYear INT ,
+ @EndMonth INT ,
+ @EndYear INT ,
+ @PrjNameStart NVARCHAR(100) = 'T1.[PrjName]', -- Parameter for filtering by start of project name range
+	@PrjNameEnd NVARCHAR(100)='T1.[PrjName]' -- Parameter for 
+ 	as begin
+-- First Query (T0.[Account] LIKE '51%')
+SELECT
+    CASE 
+        WHEN T0.[Account] LIKE '41010101' THEN 'Revenue' 
+        WHEN T0.[Account] LIKE '51%' THEN 'BILLABLE' 
+        WHEN T0.[Account] LIKE '52%' THEN 'UNBILLABLE' 
+        ELSE 'Other' 
+    END AS AccountGroup,
+    T0.[Account] + ' - ' + T4.[AcctName] AS AccountName,
+	T0.[Account],
+    T4.[AcctName],
+    Sum(Isnull(T0.[Debit], 0)) AS Debit,
+    Sum(Isnull(T0.[Credit], 0)) AS Credit,
+    T0.[Project] AS [Project],
+    T1.[PrjName],
+    T1.[U_Clnt] AS Client,
+    T3.SlpName AS [Sales Employee],
+    T4.[Counter],
+    t0.RefDate
+FROM
+    JDT1 T0
+    INNER JOIN OPRJ T1 ON T0.[Project] = T1.[PrjCode]
+    LEFT JOIN OCRD T2 ON T1.[U_Clnt] = T2.CardCode
+    LEFT JOIN OSLP T3 ON T2.SlpCode = T3.SlpCode
+    INNER JOIN OACT T4 ON T0.[Account] = T4.[AcctCode]
+WHERE
+    T0.[Account] LIKE '51%'
+    AND YEAR(T0.RefDate) * 12 + MONTH(T0.RefDate) BETWEEN @StartYear * 12 + @StartMonth AND @EndYear * 12 + @EndMonth
+    AND T1.[PrjName] BETWEEN @PrjNameStart AND @PrjNameEnd
+	--AND (T1.[PrjName] BETWEEN 'ACCOUNTING' AND 'ADMIN')
+	--AND (T0.[Project]  BETWEEN 'MM-0001' AND 'MM-0667')
+GROUP BY
+    T0.[Account], T4.[AcctName], T0.[Project], T1.[PrjName], T1.[U_Clnt], T3.SlpName, T4.[Counter], t0.RefDate
+
+-- Second Query (T0.[Account] LIKE '52%')
+UNION ALL 
+SELECT
+    CASE 
+        WHEN T0.[Account] LIKE '41010101' THEN 'Revenue' 
+        WHEN T0.[Account] LIKE '51%' THEN 'BILLABLE' 
+        WHEN T0.[Account] LIKE '52%' THEN 'UNBILLABLE' 
+        ELSE 'Other' 
+    END AS AccountGroup,
+	T0.[Account] + ' - ' + T4.[AcctName] AS AccountName,
+    T0.[Account],
+    T4.[AcctName],
+    Sum(Isnull(T0.[Debit], 0)) AS Debit,
+    Sum(Isnull(T0.[Credit], 0)) AS Credit,
+    T0.[Project] AS [Project],
+    T1.[PrjName],
+    T1.[U_Clnt] AS Client,
+    T3.SlpName AS [Sales Employee],
+    T4.[Counter],
+    t0.RefDate
+FROM
+    JDT1 T0
+    INNER JOIN OPRJ T1 ON T0.[Project] = T1.[PrjCode]
+    LEFT JOIN OCRD T2 ON T1.[U_Clnt] = T2.CardCode
+    LEFT JOIN OSLP T3 ON T2.SlpCode = T3.SlpCode
+    INNER JOIN OACT T4 ON T0.[Account] = T4.[AcctCode]
+WHERE
+    T0.[Account] LIKE '52%'
+    AND YEAR(T0.RefDate) * 12 + MONTH(T0.RefDate) BETWEEN @StartYear * 12 + @StartMonth AND @EndYear * 12 + @EndMonth
+      AND T1.[PrjName] BETWEEN @PrjNameStart AND @PrjNameEnd
+	 --AND (T1.[PrjName] BETWEEN 'ACCOUNTING' AND 'ADMIN')
+	--AND (T0.[Project]  BETWEEN 'MM-0001' AND 'MM-0667')
+GROUP BY
+    T0.[Account], T4.[AcctName], T0.[Project], T1.[PrjName], T1.[U_Clnt], T3.SlpName, T4.[Counter], t0.RefDate
+
+-- Third Query (T0.[Account] LIKE '41010101')
+UNION ALL
+SELECT
+    CASE 
+        WHEN T0.[Account] LIKE '41010101' THEN 'Revenue' 
+        WHEN T0.[Account] LIKE '51%' THEN 'BILLABLE' 
+        WHEN T0.[Account] LIKE '52%' THEN 'UNBILLABLE' 
+        ELSE 'Other' 
+    END AS AccountGroup,
+	T0.[Account] + ' - ' + T4.[AcctName] AS AccountName,
+    T0.[Account],
+    T4.[AcctName],
+    Sum(Isnull(T0.[Debit], 0)) AS Debit,
+    Sum(Isnull(T0.[Credit], 0)) AS Credit,
+    T1.[PrjCode] AS [Project],
+    T1.[PrjName],
+    T1.[U_Clnt] AS Client,
+    T3.SlpName AS [Sales Employee],
+    T4.[Counter],
+    t0.RefDate
+FROM
+    JDT1 T0
+    LEFT JOIN OPRJ T1 ON T0.[ContraAct] = T1.[U_Clnt]
+    LEFT JOIN OCRD T2 ON T0.[ContraAct] = T2.[CardCode]
+    LEFT JOIN OSLP T3 ON T2.[SlpCode] = T3.[SlpCode]
+    INNER JOIN OACT T4 ON T0.[Account] = T4.[AcctCode]
+WHERE
+    T0.[Account] LIKE '41010101'
+    AND YEAR(T0.RefDate) * 12 + MONTH(T0.RefDate) BETWEEN @StartYear * 12 + @StartMonth AND @EndYear * 12 + @EndMonth
+     AND T1.[PrjName] BETWEEN @PrjNameStart AND @PrjNameEnd
+	--AND (T1.[PrjName] BETWEEN 'ACCOUNTING' AND 'ADMIN')
+	--AND (T0.[Project]  BETWEEN 'MM-0001' AND 'MM-0667')
+GROUP BY
+    T0.[Account], T4.[AcctName], T1.[PrjCode], T1.[PrjName], T1.[U_Clnt], T3.SlpName, T4.[Counter], t0.RefDate
+
+END
