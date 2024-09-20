@@ -1,0 +1,13 @@
+SELECT 
+    a.itemcode, 
+    a.AsstStatus,
+    a.itemname,
+    a.itemtype,
+    b.Project
+FROM 
+    OITM a
+LEFT JOIN 
+    ITM5 b ON a.itemcode = b.itemcode
+WHERE 
+    b.Project IS NULL
+    AND a.itemtype = 'Fixed Asset';
